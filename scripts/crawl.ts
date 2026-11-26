@@ -27,6 +27,12 @@ const KEYWORDS: [RegExp, number][] = [
 ];
 const AVOID = /news|event|gallery|photo|video|tender|career|job|alumni|login|calendar\/\d|\/tag\/|\/category\/|\/author\/|\/feed|print=/i;
 
+// Skip pages whose title or opening text indicate a student roll: seat lists,
+// named merit/result lists, result sheets. These contain personal names and
+// have no value for admission queries.
+const SKIP_ROLL =
+  /\bseat[\s\-]list\b|\bmerit[\s\-]list\b|\bresult\s+sheet\b|\broll\s*no\.?\s+\d|\bstudent\s+name\s+gender\b/i;
+
 // Domains whose servers have a broken TLS cert chain (valid leaf cert, missing intermediate).
 // We supply the missing intermediate from certs/ so full chain verification succeeds.
 // Each cert was obtained from the AIA extension in that domain's leaf certificate.
@@ -113,12 +119,13 @@ async function crawlUniversity(uni: UniversitySeed) {
   const seen = new Set<string>();
   const push = (url: string | null, depth: number) => {
     if (!url || seen.has(url) || !inDomain(url, uni.domain) || SKIP_EXT.test(url) || isStaleUrl(url)) return;
+    if (uni.exclude?.includes(url)) return; // permanently excluded URL
     seen.add(url);
     queue.push({ url, depth, s: score(url, depth) });
   };
   for (const s of uni.seeds) push(normalizeUrl(s), 0);
 
-  let stored = 0, changed = 0, fetched = 0, failed = 0, tooShort = 0, offDomain = 0, duplicates = 0;
+  let stored = 0, changed = 0, fetched = 0, failed = 0, tooShort = 0, skippedRolls = 0, offDomain = 0, duplicates = 0;
   const consec = new Map<string, number>(); // consecutive 403/429 count per origin
   const blocked = new Set<string>();        // origins that tripped the circuit breaker
   const statuses = new Map<string, number>();
@@ -207,6 +214,13 @@ async function crawlUniversity(uni: UniversitySeed) {
         if (kind === "pdf") tally("pdf-no-text (scanned?)");
         continue;
       }
+      // Skip student rolls: seat lists, named merit/result lists, entry-test
+      // result sheets. Checked on title + first 300 chars to catch short PDFs.
+      if (SKIP_ROLL.test(title) || SKIP_ROLL.test(text.slice(0, 300))) {
+        skippedRolls++;
+        tally("student-roll (skipped)");
+        continue;
+      }
 
       const hash = crypto.createHash("sha256").update(text).digest("hex");
       // same text under another URL (www vs bare host, /index vs /): keep the first
@@ -231,7 +245,8 @@ async function crawlUniversity(uni: UniversitySeed) {
     : "";
   log(
     `done: ${stored} stored, ${changed} new or changed, ${failed} failed, ` +
-      `${tooShort} too short (<${MIN_TEXT} chars), ${offDomain} redirected off-domain, ${duplicates} duplicates skipped` +
+      `${tooShort} too short (<${MIN_TEXT} chars), ${skippedRolls} student rolls skipped, ` +
+      `${offDomain} redirected off-domain, ${duplicates} duplicates skipped` +
       (why ? `\n[${uni.id}] failure breakdown: ${why}` : "") +
       blockedMsg
   );

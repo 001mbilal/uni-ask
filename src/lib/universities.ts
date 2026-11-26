@@ -8,6 +8,12 @@ export type UniversitySeed = {
   seeds: string[];
   /** Short names people actually type, used to detect which university a question is about. */
   aliases: string[];
+  /**
+   * Exact URLs to never crawl or store. Checked before queueing and again
+   * before storing, so a re-crawl cannot re-add an excluded document.
+   * Use for stale versioned files and known personal-data documents.
+   */
+  exclude?: string[];
 };
 
 // Verify these URLs before the first crawl. Sites move pages around, and a wrong
@@ -53,6 +59,11 @@ export const UNIVERSITIES: UniversitySeed[] = [
     domain: "uok.edu.pk",
     seeds: ["https://www.uok.edu.pk/", "https://admission.uok.edu.pk/"],
     aliases: ["uok", "karachi university", "university of karachi", "ku"],
+    exclude: [
+      // Enrolled-student seat lists (names, seat numbers); no admission info
+      "https://www.uok.edu.pk/semester-fees/docs/slmpxxiv.pdf",
+      "https://www.uok.edu.pk/semester-fees/docs/slepxxiv.pdf",
+    ],
   },
   {
     id: "ned",
@@ -109,6 +120,12 @@ export const UNIVERSITIES: UniversitySeed[] = [
     domain: "uet.edu.pk",
     seeds: ["https://www.uet.edu.pk/"],
     aliases: ["uet", "uet lahore"],
+    exclude: [
+      // Old undergraduate prospectuses (Spring 2026 ×2, Fall 2025); keeping Spring 2027 only
+      "https://admission.uet.edu.pk/uploads/downloads/2f6405b8-22a6-485e-b8aa-65deefb4c942.pdf",
+      "https://admission.uet.edu.pk/uploads/downloads/559fc79c-04b2-4ead-81f2-d7f9af2601a9.pdf",
+      "https://admission.uet.edu.pk/uploads/downloads/1d111018-7c33-455a-9aa0-662f7c30da9e.pdf",
+    ],
   },
   {
     id: "habib",
@@ -117,6 +134,10 @@ export const UNIVERSITIES: UniversitySeed[] = [
     domain: "habib.edu.pk",
     seeds: ["https://habib.edu.pk/"],
     aliases: ["habib", "habib university"],
+    exclude: [
+      // Older course catalog; keeping 2025-26 only
+      "https://habib.edu.pk/wp-content/uploads/2025/07/HU-Course-Catalog-2024-25.pdf",
+    ],
   },
   {
     id: "ist",
@@ -157,6 +178,11 @@ export const UNIVERSITIES: UniversitySeed[] = [
     domain: "szabist.edu.pk",
     seeds: ["https://szabist.edu.pk/"],
     aliases: ["szabist"],
+    exclude: [
+      // Older prospectus versions; keeping 2026-27 only
+      "https://docs.szabist.edu.pk/websites/Prospectus/2026/Prospectus%202025-26%20(15April26).pdf",
+      "https://docs.szabist.edu.pk/websites/Prospectus/2025/Prospectus%202025-26%20Final.pdf",
+    ],
   },
   {
     id: "uop",
