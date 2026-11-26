@@ -119,7 +119,8 @@ async function crawlUniversity(uni: UniversitySeed) {
   const seen = new Set<string>();
   const push = (url: string | null, depth: number) => {
     if (!url || seen.has(url) || !inDomain(url, uni.domain) || SKIP_EXT.test(url) || isStaleUrl(url)) return;
-    if (uni.exclude?.includes(url)) return; // permanently excluded URL
+    if (uni.exclude?.includes(url)) return; // permanently excluded exact URL
+    if (uni.excludePrefixes?.some((p) => url.startsWith(p))) return; // excluded prefix
     seen.add(url);
     queue.push({ url, depth, s: score(url, depth) });
   };

@@ -9,11 +9,17 @@ export type UniversitySeed = {
   /** Short names people actually type, used to detect which university a question is about. */
   aliases: string[];
   /**
-   * Exact URLs to never crawl or store. Checked before queueing and again
-   * before storing, so a re-crawl cannot re-add an excluded document.
-   * Use for stale versioned files and known personal-data documents.
+   * Exact URLs to never crawl or store. Checked before queueing so a
+   * re-crawl cannot re-add an excluded document. Use for stale versioned
+   * files and known personal-data documents with opaque or unique URLs.
    */
   exclude?: string[];
+  /**
+   * URL prefixes: any URL that starts with one of these strings is excluded.
+   * Use when many related URLs share a common path prefix (e.g. all
+   * merit-list PDFs under /admissions/2026/frx…).
+   */
+  excludePrefixes?: string[];
 };
 
 // Verify these URLs before the first crawl. Sites move pages around, and a wrong
@@ -64,6 +70,11 @@ export const UNIVERSITIES: UniversitySeed[] = [
       "https://www.uok.edu.pk/semester-fees/docs/slmpxxiv.pdf",
       "https://www.uok.edu.pk/semester-fees/docs/slepxxiv.pdf",
     ],
+    excludePrefixes: [
+      // Final merit lists for PG admissions 2026 (64 files, one per dept).
+      // These are named-candidate interview result lists, not aggregate data.
+      "https://www.uok.edu.pk/admissions/2026/frx",
+    ],
   },
   {
     id: "ned",
@@ -72,6 +83,12 @@ export const UNIVERSITIES: UniversitySeed[] = [
     domain: "neduet.edu.pk",
     seeds: ["https://www.neduet.edu.pk/"],
     aliases: ["ned", "neduet", "ned university"],
+    exclude: [
+      // Entry-test result sheets (roll numbers + pass/fail); no admission info
+      "https://www.neduet.edu.pk/sites/default/files/Admissions-2026/27aug26/TIEST_RESULTS.pdf",
+      "https://www.neduet.edu.pk/sites/default/files/Admissions-2026/28-08-2026/Result_TIEST_Ph_3_SF.pdf",
+      "https://www.neduet.edu.pk/sites/default/files/Admissions-2026/04-09-2026/RESULT_TIEST_PHASE-IV.pdf",
+    ],
   },
   {
     id: "comsats",
@@ -125,6 +142,10 @@ export const UNIVERSITIES: UniversitySeed[] = [
       "https://admission.uet.edu.pk/uploads/downloads/2f6405b8-22a6-485e-b8aa-65deefb4c942.pdf",
       "https://admission.uet.edu.pk/uploads/downloads/559fc79c-04b2-4ead-81f2-d7f9af2601a9.pdf",
       "https://admission.uet.edu.pk/uploads/downloads/1d111018-7c33-455a-9aa0-662f7c30da9e.pdf",
+      // Closing merit / waiting-queue lists (individual student aggregates)
+      "https://admission.uet.edu.pk/uploads/downloads/bce6493e-8fe7-4e9e-a013-92003937d908.pdf",
+      "https://admission.uet.edu.pk/uploads/downloads/6b28c330-8368-43c3-809c-34f69e22422f.pdf",
+      "https://admission.uet.edu.pk/uploads/downloads/0116ccde-7b9b-465b-a103-71ebc625fd6a.pdf",
     ],
   },
   {
