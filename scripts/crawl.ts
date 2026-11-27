@@ -275,6 +275,7 @@ async function main() {
 }
 
 // Guard: run main only when executed as a script, not when imported (e.g. by tests)
-if (process.argv[1]?.endsWith("crawl.ts") || process.argv[1]?.endsWith("crawl.js")) {
+const _argv1 = process.argv[1] ?? "";
+if (_argv1.endsWith("/scripts/crawl.ts") || _argv1.endsWith("/scripts/crawl.js") || _argv1 === "scripts/crawl.ts") {
   main().catch((e) => { console.error(e); process.exit(1); });
 }
