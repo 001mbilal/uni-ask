@@ -11,7 +11,8 @@
     "embed": "tsx scripts/embed.ts",
     "search": "tsx scripts/search.ts",
     "stats": "tsx scripts/stats.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.13.0",
