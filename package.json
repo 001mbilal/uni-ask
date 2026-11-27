@@ -12,7 +12,7 @@
     "search": "tsx scripts/search.ts",
     "stats": "tsx scripts/stats.ts",
     "test": "vitest run",
-    "prepare": "git config core.hooksPath .githooks"
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.13.0",

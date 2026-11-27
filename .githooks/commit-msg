@@ -20,9 +20,9 @@ if grep -qiE "^claude-session:" "$MSG_FILE"; then
   exit 1
 fi
 
-if grep -qiE "^generated with" "$MSG_FILE"; then
+if grep -qiE "generated with" "$MSG_FILE"; then
   echo "ERROR: commit-msg hook: 'Generated with' footer is not allowed." >&2
-  echo "       Remove the Generated-with line and retry." >&2
+  echo "       Remove the 'Generated with' line and retry." >&2
   exit 1
 fi
 
