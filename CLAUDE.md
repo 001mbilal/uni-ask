@@ -5,6 +5,12 @@
 - Remote: `git@github-001mbilal:001mbilal/uni-ask.git` (SSH alias, no token in URL).
 - **main is protected**: never push directly to main. All changes go through a PR.
 
+## GitHub CLI
+- **Always use `scripts/gh.sh` instead of `gh` directly.** It injects `GH_TOKEN` for
+  `001mbilal` automatically, so the correct account is always used regardless of which
+  account is globally active in the shell.
+- Never run `gh auth switch`. Never call bare `gh` for API or PR operations.
+
 ## Branch naming
 | Prefix | Use for |
 |--------|---------|
