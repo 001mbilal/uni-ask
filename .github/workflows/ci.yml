@@ -53,43 +53,55 @@ jobs:
             HEAD="${{ github.sha }}"
           fi
 
+          # Guard: on the first push of a new branch, 'before' is the zero SHA.
+          # Fall back to the repo's root commit so the full branch is checked.
+          if [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            BASE="$(git rev-list --max-parents=0 HEAD)"
+          fi
+
           FAIL=0
+          # --no-merges skips merge commits; their messages are auto-generated
+          # and irrelevant, and including them risks scanning already-checked commits
+          # when force-pushes shift the BASE ref.
           while IFS= read -r hash; do
             MSG="$(git log -1 --format="%B" "$hash")"
             SHORT="$(git log -1 --format="%h %s" "$hash")"
 
-            if echo "$MSG" | grep -qiE "^co-authored-by:"; then
+            if echo "$MSG" | grep -qiE "co-authored-by:"; then
               echo "ERROR: $SHORT — contains Co-authored-by trailer" >&2
               FAIL=1
             fi
-            if echo "$MSG" | grep -qiE "^claude-session:"; then
+            if echo "$MSG" | grep -qiE "claude-session:"; then
               echo "ERROR: $SHORT — contains Claude-Session trailer" >&2
               FAIL=1
             fi
-            if echo "$MSG" | grep -qiE "generated with"; then
-              echo "ERROR: $SHORT — contains 'generated with' footer" >&2
+            # Match the actual Claude Code footer ("🤖 Generated with [Claude Code]...")
+            # and similar AI-tool footers; tightened to avoid false positives on prose.
+            if echo "$MSG" | grep -qiE "generated with (claude|copilot|chatgpt|openai|gemini|gpt)"; then
+              echo "ERROR: $SHORT — contains AI-tool attribution footer" >&2
               FAIL=1
             fi
-          done < <(git log --format="%H" "${BASE}..${HEAD}")
+          done < <(git log --no-merges --format="%H" "${BASE}..${HEAD}")
 
           exit $FAIL
 
       - name: Check PR body
         if: github.event_name == 'pull_request'
-        env:
-          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
+          # Read the PR body from the event JSON to avoid YAML injection
+          # from special characters (quotes, backticks, newlines) in the body.
+          PR_BODY="$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")"
           FAIL=0
-          if echo "$PR_BODY" | grep -qiE "^co-authored-by:"; then
+          if echo "$PR_BODY" | grep -qiE "co-authored-by:"; then
             echo "ERROR: PR body contains Co-authored-by trailer" >&2
             FAIL=1
           fi
-          if echo "$PR_BODY" | grep -qiE "^claude-session:"; then
+          if echo "$PR_BODY" | grep -qiE "claude-session:"; then
             echo "ERROR: PR body contains Claude-Session trailer" >&2
             FAIL=1
           fi
-          if echo "$PR_BODY" | grep -qiE "generated with"; then
-            echo "ERROR: PR body contains 'generated with' footer" >&2
+          if echo "$PR_BODY" | grep -qiE "generated with (claude|copilot|chatgpt|openai|gemini|gpt)"; then
+            echo "ERROR: PR body contains AI-tool attribution footer" >&2
             FAIL=1
           fi
           exit $FAIL
