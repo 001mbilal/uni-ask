@@ -4,7 +4,8 @@ Run this command to ship the current branch. It refuses to run on main or with u
 uncommitted changes. It gates on local checks, opens a PR, reviews the diff in a fresh
 subagent, and enables auto-merge (with one exception — see step 6).
 
-All `gh` calls use `GH_TOKEN=$(gh auth token --user 001mbilal)`.
+All `gh` calls go through `scripts/gh.sh`, which injects the correct token automatically.
+Never call `gh` directly or run `gh auth switch`.
 
 ---
 
@@ -49,7 +50,7 @@ git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
 Open the PR. Fill the template from **real command output**, not placeholders:
 
 ```bash
-GH_TOKEN=$(gh auth token --user 001mbilal) gh pr create \
+scripts/gh.sh pr create \
   --title "<conventional-commits-style title matching the branch's commits>" \
   --body "$(cat <<'BODY'
 ## Summary
@@ -86,14 +87,14 @@ Capture and remember the PR number and URL for the following steps.
 
 Spawn a **fork subagent** (no prior context about this PR) and ask it to:
 
-1. Fetch the diff: `GH_TOKEN=$(gh auth token --user 001mbilal) gh pr diff <PR number>`
+1. Fetch the diff: `scripts/gh.sh pr diff <PR number>`
 2. Review it for: correctness bugs, security issues (injection, exposed secrets, auth bypass),
    CLAUDE.md rule violations, and anything that would break the crawl pipeline or answer quality.
 3. Return a structured list of findings, severity (important / nit), and suggested fixes.
 
 After the fork returns its findings:
 
-- Post all findings as a **single PR comment** (use `gh pr comment <PR number> --body "..."`)
+- Post all findings as a **single PR comment** (use `scripts/gh.sh pr comment <PR number> --body "..."`)
 - For every **important** finding: fix it in a new commit on this branch, push, then resolve the
   conversation with a reply noting the fix.
 - Nits do not block shipping but should be listed.
@@ -104,7 +105,7 @@ After the fork returns its findings:
 **Check the exception in step 6 first.** If the exception does NOT apply:
 
 ```bash
-GH_TOKEN=$(gh auth token --user 001mbilal) gh pr merge --auto --squash --delete-branch <PR number>
+scripts/gh.sh pr merge --auto --squash --delete-branch <PR number>
 ```
 
 This schedules a squash merge the moment the "Typecheck, build, test" CI check goes green.
