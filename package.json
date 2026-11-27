@@ -10,7 +10,8 @@
     "crawl": "tsx scripts/crawl.ts",
     "embed": "tsx scripts/embed.ts",
     "search": "tsx scripts/search.ts",
-    "stats": "tsx scripts/stats.ts"
+    "stats": "tsx scripts/stats.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.13.0",
@@ -31,6 +32,7 @@
     "@types/react-dom": "^19.3.0",
     "tailwindcss": "^4.3.5",
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^3.2.7"
   }
 }
