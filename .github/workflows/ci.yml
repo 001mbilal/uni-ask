@@ -32,3 +32,64 @@ jobs:
 
       - name: Test
         run: npm test
+
+  commit-hygiene:
+    name: commit-hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Fetch full history so we can inspect every commit in the PR range.
+          fetch-depth: 0
+
+      - name: Check commits in PR range
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+          else
+            # On push to main, check only the pushed commit(s).
+            BASE="${{ github.event.before }}"
+            HEAD="${{ github.sha }}"
+          fi
+
+          FAIL=0
+          while IFS= read -r hash; do
+            MSG="$(git log -1 --format="%B" "$hash")"
+            SHORT="$(git log -1 --format="%h %s" "$hash")"
+
+            if echo "$MSG" | grep -qiE "^co-authored-by:"; then
+              echo "ERROR: $SHORT — contains Co-authored-by trailer" >&2
+              FAIL=1
+            fi
+            if echo "$MSG" | grep -qiE "^claude-session:"; then
+              echo "ERROR: $SHORT — contains Claude-Session trailer" >&2
+              FAIL=1
+            fi
+            if echo "$MSG" | grep -qiE "generated with"; then
+              echo "ERROR: $SHORT — contains 'generated with' footer" >&2
+              FAIL=1
+            fi
+          done < <(git log --format="%H" "${BASE}..${HEAD}")
+
+          exit $FAIL
+
+      - name: Check PR body
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          FAIL=0
+          if echo "$PR_BODY" | grep -qiE "^co-authored-by:"; then
+            echo "ERROR: PR body contains Co-authored-by trailer" >&2
+            FAIL=1
+          fi
+          if echo "$PR_BODY" | grep -qiE "^claude-session:"; then
+            echo "ERROR: PR body contains Claude-Session trailer" >&2
+            FAIL=1
+          fi
+          if echo "$PR_BODY" | grep -qiE "generated with"; then
+            echo "ERROR: PR body contains 'generated with' footer" >&2
+            FAIL=1
+          fi
+          exit $FAIL
