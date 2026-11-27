@@ -30,7 +30,7 @@ const AVOID = /news|event|gallery|photo|video|tender|career|job|alumni|login|cal
 // Skip pages whose title or opening text indicate a student roll: seat lists,
 // named merit/result lists, result sheets. These contain personal names and
 // have no value for admission queries.
-const SKIP_ROLL =
+export const SKIP_ROLL =
   /\bseat[\s\-]list\b|\bmerit[\s\-]list\b|\bresult\s+sheet\b|\broll\s*no\.?\s+\d|\bstudent\s+name\s+gender\b/i;
 
 // Domains whose servers have a broken TLS cert chain (valid leaf cert, missing intermediate).
@@ -41,7 +41,7 @@ const SKIP_ROLL =
 //     subject: CN=RapidSSL TLS RSA CA G1, O=DigiCert Inc
 const BROKEN_CHAIN_DOMAINS = new Set(["szabist.edu.pk"]);
 
-function score(url: string, depth: number) {
+export function score(url: string, depth: number) {
   let s = -depth;
   for (const [re, w] of KEYWORDS) if (re.test(url)) s += w;
   if (AVOID.test(url)) s -= 4;
@@ -57,7 +57,7 @@ export function isStaleUrl(url: string): boolean {
   return years.length > 0 && Math.max(...years) < OLDEST_YEAR;
 }
 
-function normalizeUrl(raw: string): string | null {
+export function normalizeUrl(raw: string): string | null {
   try {
     const u = new URL(raw);
     if (u.protocol !== "http:" && u.protocol !== "https:") return null;
@@ -72,7 +72,7 @@ function normalizeUrl(raw: string): string | null {
   }
 }
 
-function inDomain(url: string, domain: string) {
+export function inDomain(url: string, domain: string) {
   try {
     const h = new URL(url).hostname.toLowerCase();
     return h === domain || h.endsWith("." + domain);
@@ -274,4 +274,7 @@ async function main() {
   console.log("Crawl finished. Next: npm run embed");
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+// Guard: run main only when executed as a script, not when imported (e.g. by tests)
+if (process.argv[1]?.endsWith("crawl.ts") || process.argv[1]?.endsWith("crawl.js")) {
+  main().catch((e) => { console.error(e); process.exit(1); });
+}
