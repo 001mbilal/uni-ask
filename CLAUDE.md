@@ -20,12 +20,20 @@
 - Never amend a published commit; create a new one instead.
 
 ## Pull request workflow
-1. Create a branch with the correct prefix.
-2. Open a PR via `GH_TOKEN=$(gh auth token --user 001mbilal) gh pr create`.
-3. Self-review: post a review comment listing any issues found.
-4. Fix issues, push, then stop and show the PR URL to the user.
-5. Wait for the user to say "merge" before merging.
-6. Merge via squash (`gh pr merge --squash --delete-branch`).
+
+**Always use `/ship` to ship a branch. Never push directly to main. Never bypass branch protection.**
+
+`/ship` does the following automatically:
+1. Refuses to run on main or with uncommitted changes.
+2. Runs `npm run typecheck`, `npm test`, and `npm run build` — stops on any failure.
+3. Pushes the branch over the SSH alias (`git@github-001mbilal:...`) and opens a PR.
+4. Reviews the diff in a fresh subagent (no prior context), posts findings as a PR comment, and fixes any important issues.
+5. Enables auto-merge (`gh pr merge --auto --squash --delete-branch`) so the PR merges itself when CI goes green.
+6. **Exception — do NOT enable auto-merge** if the diff touches:
+   - `scripts/crawl.ts`: politeness rules, circuit breaker, robots.txt, User-Agent, delays
+   - `src/lib/answer.ts`: system prompt, citation rules, retrieval, model selection
+   - `src/lib/universities.ts`: `exclude` or `excludePrefixes` arrays
+   In that case, post the PR URL and wait for the owner to say "merge".
 
 ## Crawling ethics — hard rules
 - **No UA spoofing.** The crawler uses `UniAskBot/0.1 (+contact: <CRAWL_CONTACT>)`.
