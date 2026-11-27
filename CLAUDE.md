@@ -25,6 +25,22 @@
 - Author: `Muhammad Bilal <mbilalsheikh.dev@gmail.com>`.
 - Never amend a published commit; create a new one instead.
 
+## Attribution — enforcement, not instructions
+Attribution is **disabled at every layer**:
+
+| Layer | Mechanism |
+|-------|-----------|
+| Claude settings | `.claude/settings.json` — `attribution.commit` and `attribution.pr` are empty strings; `sessionUrl` is false |
+| Local pre-commit | `.githooks/pre-commit` rejects any commit whose author email ≠ `mbilalsheikh.dev@gmail.com` |
+| Local commit-msg | `.githooks/commit-msg` rejects `Co-authored-by`, `Claude-Session`, and AI-tool attribution footers |
+| CI | `commit-hygiene` job in `.github/workflows/ci.yml` runs the same checks on every commit in the PR range and on the PR body; it is a required status check on main |
+| Squash merge | Repo is configured to use the PR title + PR body as the squash commit message (not the individual commit log) |
+
+**If a trailer appears despite these controls:**
+1. Stop immediately — do not commit or push.
+2. Tell the owner exactly which trailer appeared and in which file/message.
+3. Wait for the owner's decision. Never bypass the hook with `--no-verify`.
+
 ## Pull request workflow
 
 **Always use `/ship` to ship a branch. Never push directly to main. Never bypass branch protection.**
