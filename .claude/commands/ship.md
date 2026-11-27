@@ -33,9 +33,9 @@ fi
 Run these in order. Stop immediately if any exit non-zero; do NOT open a PR.
 
 ```bash
-npm run typecheck   # tsc --noEmit
-npm test            # vitest run (44 pure tests, no network/DB)
-npm run build       # next build NEXT_TELEMETRY_DISABLED=1
+npm run typecheck                       # tsc --noEmit
+npm test                                # vitest run
+NEXT_TELEMETRY_DISABLED=1 npm run build # next build
 ```
 
 ## Step 3 — Push and open PR
@@ -67,14 +67,14 @@ build:     <exit code and route summary>
 - [x] Chore / infra / docs
 
 ## Checklist
-- [x] Branch name follows prefix convention
-- [x] Commits use Conventional Commits format
-- [x] npm run typecheck passes
-- [x] npm test passes
-- [x] npm run build passes
+- [ ] Branch name follows prefix convention (`feat/`, `fix/`, `chore/`, `docs/`)
+- [ ] Commits use Conventional Commits format
+- [ ] `npm run typecheck` passed (exit 0)
+- [ ] `npm test` passed (exit 0, N/N tests)
+- [ ] `npm run build` passed (exit 0)
 - [ ] No personal data added
-- [ ] New exclude/excludePrefixes entries added for any personal-data documents
-- [ ] Crawl changes tested with npm run crawl -- <uni-id>
+- [ ] New `exclude`/`excludePrefixes` entries added for any personal-data documents
+- [ ] Crawl changes tested with `npm run crawl -- <uni-id>`
 BODY
 )" \
   --base main
@@ -112,7 +112,16 @@ Print the PR URL and say: "auto-merge enabled — will merge when CI passes."
 
 ## Step 6 — Exception: sensitive diffs require manual merge
 
-Do NOT enable auto-merge if the diff touches **any** of the following:
+First, check whether the exception applies using an explicit diff command:
+
+```bash
+SENSITIVE=$(git diff origin/main..HEAD -- \
+  scripts/crawl.ts \
+  src/lib/answer.ts \
+  src/lib/universities.ts)
+```
+
+If `$SENSITIVE` is non-empty, the exception applies. The sensitive files and areas are:
 
 | File | Sensitive area |
 |------|----------------|
