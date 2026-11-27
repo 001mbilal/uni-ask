@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Reject commits whose author email is not mbilalsheikh.dev@gmail.com.
+# This catches global git identity leaking in from other accounts or tools.
+set -euo pipefail
+
+REQUIRED_EMAIL="mbilalsheikh.dev@gmail.com"
+# Use `git var GIT_AUTHOR_IDENT` so GIT_AUTHOR_EMAIL env override is respected,
+# matching the email that will actually be written into the commit object.
+AUTHOR_IDENT="$(git var GIT_AUTHOR_IDENT)"
+ACTUAL_EMAIL="$(echo "$AUTHOR_IDENT" | sed 's/.*<\(.*\)>.*/\1/')"
+
+if [ "$ACTUAL_EMAIL" != "$REQUIRED_EMAIL" ]; then
+  echo "ERROR: pre-commit hook: wrong author email." >&2
+  echo "       Expected: $REQUIRED_EMAIL" >&2
+  echo "       Got:      $ACTUAL_EMAIL" >&2
+  echo >&2
+  echo "       Run: git config --local user.email \"$REQUIRED_EMAIL\"" >&2
+  exit 1
+fi
+
+exit 0
